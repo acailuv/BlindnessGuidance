@@ -66,6 +66,9 @@ class MainActivity : AppCompatActivity() {
             val requestNotificationAccess = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
             startActivity(requestNotificationAccess)
         }
+
+        mTTS.speak("Hello, and welcome to Blindness Guidance. Say 'Navigate to' followed with a destination to get started!", TextToSpeech.QUEUE_FLUSH, null)
+        mTTS.speak("You can also say 'Help' to listen to this tutorial again. Please keep that in mind.", TextToSpeech.QUEUE_FLUSH, null)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -119,6 +122,10 @@ class MainActivity : AppCompatActivity() {
                                     5000
                                 )
                             }
+                        }
+
+                        "help" -> {
+                            mTTS.speak("Hello, and welcome to Blindness Guidance. Say 'Navigate to' followed with a destination to get started!", TextToSpeech.QUEUE_FLUSH, null)
                         }
 
                         else -> {
