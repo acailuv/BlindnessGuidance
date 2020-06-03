@@ -1,26 +1,23 @@
 package com.github.acailuv.blindnessguidance
 
-import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.SystemClock
 import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.github.acailuv.blindnessguidance.databinding.ActivityMainBinding
 import java.util.*
+import android.os.Handler
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -104,15 +101,23 @@ class MainActivity : AppCompatActivity() {
                             if (mapIntent.resolveActivity(packageManager) != null) {
                                 startActivity(mapIntent)
 
-                                SystemClock.sleep(5000)
+                                val handler = Handler()
+                                handler.postDelayed(
+                                    Runnable {
+                                        // Reopen This Activity
+                                        val thisIntent = baseContext.packageManager.getLaunchIntentForPackage(
+                                            baseContext.packageName)
+                                        startActivity(thisIntent)
 
-                                // Reopen This Activity
-                                val thisIntent = baseContext.packageManager.getLaunchIntentForPackage(
-                                    baseContext.packageName)
-                                startActivity(thisIntent)
-
-                                SystemClock.sleep(5000)
-                                mTTS.speak("If you do not hear any directions, the place you just mentioned might be invalid.", TextToSpeech.QUEUE_FLUSH, null)
+                                        handler.postDelayed(
+                                            Runnable {
+                                                mTTS.speak("If you do not hear any directions, the place you just mentioned might be invalid.", TextToSpeech.QUEUE_FLUSH, null)
+                                            },
+                                            5000
+                                        )
+                                    },
+                                    5000
+                                )
                             }
                         }
 
