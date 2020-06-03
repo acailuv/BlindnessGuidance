@@ -10,10 +10,9 @@
             type="com.github.acailuv.blindnessguidance.MainActivityViewModel" />
     </data>
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         tools:context=".MainActivity">
 
         <ImageButton
@@ -25,7 +24,7 @@
             android:onClick="@{() -> viewModel.speak()}"
             android:src="@drawable/ic_mic_black_300dp" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>
 

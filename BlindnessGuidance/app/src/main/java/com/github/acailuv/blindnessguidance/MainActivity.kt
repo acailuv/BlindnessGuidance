@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
@@ -16,8 +17,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.github.acailuv.blindnessguidance.databinding.ActivityMainBinding
 import java.util.*
-import android.os.Handler
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         mTTS = TextToSpeech(this, TextToSpeech.OnInitListener { status ->
             if (status == TextToSpeech.SUCCESS) {
                 val result = mTTS.setLanguage(Locale.ENGLISH)
-                mTTS.setPitch(1.4f)
+                mTTS.setPitch(1.1f)
                 mTTS.setSpeechRate(1.0f)
 
                 if (result == TextToSpeech.LANG_MISSING_DATA
