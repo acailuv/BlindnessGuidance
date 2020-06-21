@@ -22,6 +22,7 @@
             android:layout_margin="16dp"
             android:background="@color/colorPrimaryDark"
             android:onClick="@{() -> viewModel.speak()}"
+            android:onLongClick="@{() -> viewModel.speakIndonesian()}"
             android:src="@drawable/ic_mic_black_300dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

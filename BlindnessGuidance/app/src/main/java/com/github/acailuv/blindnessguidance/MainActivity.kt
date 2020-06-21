@@ -1,13 +1,10 @@
 package com.github.acailuv.blindnessguidance
 
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
-import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.util.Log
@@ -21,7 +18,8 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     lateinit var mTTS: TextToSpeech
-    lateinit var notificationListener: NotificationListener
+    lateinit var mTTSIndonesian: TextToSpeech
+    lateinit var speechLanguage: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +45,22 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
+        // Text to Speech - Indonesian
+        mTTSIndonesian = TextToSpeech(this, TextToSpeech.OnInitListener { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                val result = mTTSIndonesian.setLanguage(Locale("id", "ID"))
+                mTTSIndonesian.setPitch(1.1f)
+                mTTSIndonesian.setSpeechRate(1.0f)
+
+                if (result == TextToSpeech.LANG_MISSING_DATA
+                    || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Log.e("TTS", "Language not supported.")
+                }
+            } else {
+                Log.e("TTS", "TTS Init failed.")
+            }
+        })
+
         // Live Data Observers
         viewModel.speechRecognizerIntent.observe(this, Observer { status ->
             if (status != null) {
@@ -59,12 +73,9 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        // Notification Listener
-        notificationListener = NotificationListener()
-        if (!Settings.Secure.getString(this.contentResolver,"enabled_notification_listeners").contains(applicationContext.packageName)) {
-            val requestNotificationAccess = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
-            startActivity(requestNotificationAccess)
-        }
+        viewModel.speechRecognizerLanguage.observe(this, Observer { language ->
+            speechLanguage = language
+        })
 
         mTTS.speak("Hello, and welcome to Blindness Guidance. Say 'Navigate to' followed with a destination to get started!", TextToSpeech.QUEUE_FLUSH, null)
         mTTS.speak("You can also say 'Help' to listen to this tutorial again. Please keep that in mind.", TextToSpeech.QUEUE_FLUSH, null)
@@ -123,12 +134,58 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
 
+                        "navigasike" -> {
+                            mTTSIndonesian.speak("Oke. Bernavigasi ke "+args, TextToSpeech.QUEUE_FLUSH, null)
+                            args.replace(" ", "+")
+                            val gmmIntentUri = Uri.parse("google.navigation:q="+args+"&mode=w")
+                            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                            mapIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            mapIntent.setPackage("com.google.android.apps.maps")
+                            if (mapIntent.resolveActivity(packageManager) != null) {
+                                startActivity(mapIntent)
+
+                                val handler = Handler()
+                                handler.postDelayed(
+                                    Runnable {
+                                        // Reopen This Activity
+                                        val thisIntent = baseContext.packageManager.getLaunchIntentForPackage(
+                                            baseContext.packageName)
+                                        startActivity(thisIntent)
+
+                                        handler.postDelayed(
+                                            Runnable {
+                                                mTTSIndonesian.speak("Kalau tidak ada arahan dari Google Maps, tempat yang kamu pilih bisa saja tidak valid.", TextToSpeech.QUEUE_FLUSH, null)
+                                            },
+                                            5000
+                                        )
+                                    },
+                                    5000
+                                )
+                            }
+                        }
+
                         "help" -> {
                             mTTS.speak("Hello, and welcome to Blindness Guidance. Say 'Navigate to' followed with a destination to get started!", TextToSpeech.QUEUE_FLUSH, null)
                         }
 
+                        "tolong" -> {
+                            mTTSIndonesian.speak("Halo, selamat datang ke dalam aplikasi Pemandu Tunanetra. Katakan 'Navigasi Ke' diikuti dengan tempat tujuan untuk memulai!", TextToSpeech.QUEUE_FLUSH, null)
+                        }
+
                         else -> {
-                            mTTS.speak("Command not recognized.", TextToSpeech.QUEUE_FLUSH, null)
+                            if (speechLanguage == "en") {
+                                mTTS.speak(
+                                    "Command not recognized. Say 'Help' to get started!",
+                                    TextToSpeech.QUEUE_FLUSH,
+                                    null
+                                )
+                            } else {
+                                mTTSIndonesian.speak(
+                                    "Perintah tidak dapat dikenali. Katakan 'Tolong' untuk memulai!",
+                                    TextToSpeech.QUEUE_FLUSH,
+                                    null
+                                )
+                            }
                         }
 
                     }
@@ -144,12 +201,5 @@ class MainActivity : AppCompatActivity() {
         }
 
         super.onDestroy()
-    }
-
-    class NotificationReceiver: BroadcastReceiver() {
-        override fun onReceive(p0: Context?, p1: Intent?) {
-            val temp = p1?.getStringExtra("notification_event")
-            Log.d("TEMP_BROADCAST_RECEIVER", temp)
-        }
     }
 }
