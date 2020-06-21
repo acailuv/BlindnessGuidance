@@ -21,6 +21,55 @@ class MainActivity : AppCompatActivity() {
     lateinit var mTTSIndonesian: TextToSpeech
     lateinit var speechLanguage: String
 
+    private val NO_ARGS = "NO_ARGS"
+
+    private fun navigate(args: String, language: String) {
+
+        // No destination specified.
+        if (args == NO_ARGS) {
+            when (language) {
+                "en" -> mTTS.speak("Destination not specified. Please specify your destination and try again.", TextToSpeech.QUEUE_FLUSH, null)
+                "id" -> mTTSIndonesian.speak("Tempat tujuan belum ditentukan. Mohon tentukan tempat tujuan dan coba lagi.", TextToSpeech.QUEUE_FLUSH, null)
+            }
+            return
+        }
+
+        when (language) {
+            "en" -> mTTS.speak("Understood. Navigating to "+args, TextToSpeech.QUEUE_FLUSH, null)
+            "id" -> mTTSIndonesian.speak("Oke. Bernavigasi ke "+args, TextToSpeech.QUEUE_FLUSH, null)
+        }
+        args.replace(" ", "+")
+        val gmmIntentUri = Uri.parse("google.navigation:q="+args+"&mode=w")
+        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+        mapIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        mapIntent.setPackage("com.google.android.apps.maps")
+        if (mapIntent.resolveActivity(packageManager) != null) {
+            startActivity(mapIntent)
+
+            val handler = Handler()
+            handler.postDelayed(
+                Runnable {
+                    // Reopen This Activity
+                    val thisIntent = baseContext.packageManager.getLaunchIntentForPackage(
+                        baseContext.packageName)
+                    startActivity(thisIntent)
+
+                    handler.postDelayed(
+                        Runnable {
+                            when (language) {
+                                "en" -> mTTS.speak("If you do not hear any directions, the place you just mentioned might be invalid.", TextToSpeech.QUEUE_FLUSH, null)
+                                "id" -> mTTSIndonesian.speak("Kalau tidak ada arahan dari Google Maps, tempat yang kamu pilih bisa saja tidak valid.", TextToSpeech.QUEUE_FLUSH, null)
+                            }
+
+                        },
+                        5000
+                    )
+                },
+                5000
+            )
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -93,7 +142,7 @@ class MainActivity : AppCompatActivity() {
                     // Command Parsing/Processing
                     val command = result[0].split(" ", limit=3)
                     Log.d("---------COMMAND_STRING", command.toString())
-                    var args = "NO_ARGS"
+                    var args = NO_ARGS
                     lateinit var commandParse: String
                     when (command.size) {
                         1 -> commandParse = command[0]
@@ -104,65 +153,8 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     when (commandParse) {
-                        "navigateto" -> {
-                            mTTS.speak("Understood. Navigating to "+args, TextToSpeech.QUEUE_FLUSH, null)
-                            args.replace(" ", "+")
-                            val gmmIntentUri = Uri.parse("google.navigation:q="+args+"&mode=w")
-                            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-                            mapIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                            mapIntent.setPackage("com.google.android.apps.maps")
-                            if (mapIntent.resolveActivity(packageManager) != null) {
-                                startActivity(mapIntent)
-
-                                val handler = Handler()
-                                handler.postDelayed(
-                                    Runnable {
-                                        // Reopen This Activity
-                                        val thisIntent = baseContext.packageManager.getLaunchIntentForPackage(
-                                            baseContext.packageName)
-                                        startActivity(thisIntent)
-
-                                        handler.postDelayed(
-                                            Runnable {
-                                                mTTS.speak("If you do not hear any directions, the place you just mentioned might be invalid.", TextToSpeech.QUEUE_FLUSH, null)
-                                            },
-                                            5000
-                                        )
-                                    },
-                                    5000
-                                )
-                            }
-                        }
-
-                        "navigasike" -> {
-                            mTTSIndonesian.speak("Oke. Bernavigasi ke "+args, TextToSpeech.QUEUE_FLUSH, null)
-                            args.replace(" ", "+")
-                            val gmmIntentUri = Uri.parse("google.navigation:q="+args+"&mode=w")
-                            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-                            mapIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                            mapIntent.setPackage("com.google.android.apps.maps")
-                            if (mapIntent.resolveActivity(packageManager) != null) {
-                                startActivity(mapIntent)
-
-                                val handler = Handler()
-                                handler.postDelayed(
-                                    Runnable {
-                                        // Reopen This Activity
-                                        val thisIntent = baseContext.packageManager.getLaunchIntentForPackage(
-                                            baseContext.packageName)
-                                        startActivity(thisIntent)
-
-                                        handler.postDelayed(
-                                            Runnable {
-                                                mTTSIndonesian.speak("Kalau tidak ada arahan dari Google Maps, tempat yang kamu pilih bisa saja tidak valid.", TextToSpeech.QUEUE_FLUSH, null)
-                                            },
-                                            5000
-                                        )
-                                    },
-                                    5000
-                                )
-                            }
-                        }
+                        "navigateto" -> navigate(args, speechLanguage)
+                        "navigasike" -> navigate(args, speechLanguage)
 
                         "help" -> {
                             mTTS.speak("Hello, and welcome to Blindness Guidance. Say 'Navigate to' followed with a destination to get started!", TextToSpeech.QUEUE_FLUSH, null)
@@ -198,6 +190,11 @@ class MainActivity : AppCompatActivity() {
         if (mTTS != null) {
             mTTS.stop()
             mTTS.shutdown()
+        }
+
+        if (mTTSIndonesian != null) {
+            mTTSIndonesian.stop()
+            mTTSIndonesian.shutdown()
         }
 
         super.onDestroy()
