@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
                         5000
                     )
                 },
-                5000
+                10000
             )
         }
     }
@@ -153,8 +153,13 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     when (commandParse) {
-                        "navigateto" -> navigate(args, speechLanguage)
-                        "navigasike" -> navigate(args, speechLanguage)
+                        "navigateto"    -> navigate(args, speechLanguage)
+                        "goto"          -> navigate(args, speechLanguage)
+                        "navigasike"    -> navigate(args, speechLanguage)
+                        "menujuke"      -> navigate(args, speechLanguage)
+                        "jalanke"       -> navigate(args, speechLanguage)
+                        "mengarahke"    -> navigate(args, speechLanguage)
+                        "berangkatke"   -> navigate(args, speechLanguage)
 
                         "help" -> {
                             mTTS.speak("Hello, and welcome to Blindness Guidance. Say 'Navigate to' followed with a destination to get started!", TextToSpeech.QUEUE_FLUSH, null)
