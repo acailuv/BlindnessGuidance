@@ -1,10 +1,12 @@
 package com.github.acailuv.blindnessguidance
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import android.os.Vibrator
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.util.Log
@@ -20,6 +22,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var mTTS: TextToSpeech
     lateinit var mTTSIndonesian: TextToSpeech
     lateinit var speechLanguage: String
+
+    lateinit var vibrator: Vibrator
 
     private val NO_ARGS = "NO_ARGS"
 
@@ -78,6 +82,9 @@ class MainActivity : AppCompatActivity() {
         val viewModel = ViewModelProviders.of(this).get(MainActivityViewModel::class.java)
         binding.viewModel = viewModel
 
+        // Initiating vibrate service
+        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+
         // Text to Speech
         mTTS = TextToSpeech(this, TextToSpeech.OnInitListener { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -114,6 +121,9 @@ class MainActivity : AppCompatActivity() {
         viewModel.speechRecognizerIntent.observe(this, Observer { status ->
             if (status != null) {
                 if (status.resolveActivity(packageManager) != null) {
+                    vibrator.vibrate(500)
+                    mTTS.stop()
+                    mTTSIndonesian.stop()
                     startActivityForResult(status, 10)
                 } else {
                     Toast.makeText(this, "Speech Input is not Supported On Your Device.", Toast.LENGTH_LONG).show()
@@ -125,9 +135,6 @@ class MainActivity : AppCompatActivity() {
         viewModel.speechRecognizerLanguage.observe(this, Observer { language ->
             speechLanguage = language
         })
-
-        mTTS.speak("Hello, and welcome to Blindness Guidance. Say 'Navigate to' followed with a destination to get started!", TextToSpeech.QUEUE_FLUSH, null)
-        mTTS.speak("You can also say 'Help' to listen to this tutorial again. Please keep that in mind.", TextToSpeech.QUEUE_FLUSH, null)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
